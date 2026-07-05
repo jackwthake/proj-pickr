@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h> 
 
 #include <termios.h>
 #include <unistd.h>
@@ -134,15 +135,46 @@ int collect_directories(const char *dir_path, char ***out_array) {
 }
 
 
+void print_help(const char *name) {
+  printf(BOLD_WHITE "Usage: " RESET " %s <directory>\n", name);
+  printf("\t Opens folder picker within passsed <directory>.\n"); 
+}
+
+
+void print_prompt(char ***items, int n, int sel, bool first) {
+  if (!first) {
+    fprintf(stderr, CUR_UP_N, n + 2);   // move cursor up n lines, + 2 for quit message at the end
+  }
+  
+  for (int i = 0; i < n; i++) {
+    fprintf(stderr, CLR_LINE "%s %s%s%s\n",
+      i == sel ? BOLD_RED ">" RESET : " ",
+      i == sel ? BOLD_MAGENTA : BRIGHT_BLACK,
+      (*items)[i],
+      RESET);
+  }
+  
+  fprintf(stderr, "\nPress 'q' to stay in current directory.\n");
+  fflush(stderr);
+}
+
+
 int main(int argc, char const **argv) {
+  if (argc != 2) {
+    print_help(argv[0]);
+    return 1;
+  }
+
   char **items = NULL;
   int n = collect_directories(argv[1], &items), sel = 0;
+
+  if (n == 0) { // directory with no folders
+    printf("No subfolders.\n");
+    return 1;
+  }
   
   raw_on();
-  
-  for (int i = 0; i < n; i++)
-  fprintf(stderr, "%s %s\n", i == sel ? ">" : " ", items[i]);
-  fflush(stderr);
+  print_prompt(&items, n, sel, true);
 
   while (1) {
     char c = getchar();
@@ -157,10 +189,7 @@ int main(int argc, char const **argv) {
       return 0;
     }
 
-    fprintf(stderr, CUR_UP_N, n);   // move cursor up n lines
-    for (int i = 0; i < n; i++)
-    fprintf(stderr, CLR_LINE "%s %s\n", i == sel ? ">" : " ", items[i]);
-    fflush(stderr);
+    print_prompt(&items, n, sel, false);
   }
 
   printf("%s/%s\n", argv[1], items[sel]);
