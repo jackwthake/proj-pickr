@@ -159,6 +159,16 @@ void print_prompt(char ***items, int n, int sel, bool first) {
 }
 
 
+void clear_prompt(int n) {
+  fprintf(stderr, CUR_UP_N, n + 2);   // move back up to the top of the drawn menu
+  for (int i = 0; i < n + 2; i++) {
+    fprintf(stderr, CLR_LINE "\n");
+  }
+  fprintf(stderr, CUR_UP_N, n + 2);   // move back up over the now-blank lines
+  fflush(stderr);
+}
+
+
 int main(int argc, char const **argv) {
   if (argc != 2) {
     print_help(argv[0]);
@@ -192,6 +202,7 @@ int main(int argc, char const **argv) {
     print_prompt(&items, n, sel, false);
   }
 
+  clear_prompt(n);
   printf("%s/%s\n", argv[1], items[sel]);
   return 0;
 }
