@@ -178,6 +178,7 @@ int main(int argc, char const **argv) {
   char **items = NULL;
   int n = collect_directories(argv[1], &items), sel = 0;
 
+  if (n < 0) { perror("opendir"); return 1; }
   if (n == 0) { // directory with no folders
     printf("No subfolders.\n");
     return 1;
@@ -187,15 +188,22 @@ int main(int argc, char const **argv) {
   print_prompt(&items, n, sel, true);
 
   while (1) {
-    char c = getchar();
+    int c = getchar();
+    if (c == EOF) break;     // stdin closed / terminal gone — bail out
+
     if (c == '\x1b') {
-      getchar();        // skip '['
-      char dir = getchar();
+      c = getchar();         // skip '['
+      if (c == EOF) break;   // stdin closed / terminal gone — bail out
+
+      int dir = getchar();
+      if (dir == EOF) break; // stdin closed / terminal gone — bail out
+
       if (dir == 'A') sel = (sel - 1 + n) % n;
       if (dir == 'B') sel = (sel + 1) % n;
     } else if (c == '\r' || c == '\n') {
       break;
     } else if (c == 'q') {
+      clear_prompt(n);
       return 0;
     }
 
