@@ -15,48 +15,24 @@
 #define HIDE_CURSOR    "\x1b[?25l"
 #define SHOW_CURSOR    "\x1b[?25h"
 
-// Reset
+// Color codes
+#define BOLD_RED     "\033[1;31m"
+#define BOLD_MAGENTA "\033[1;35m"
+#define BOLD_WHITE   "\033[1;37m"
+#define GRAY         "\033[90m"
+
+// Reset colors
 #define RESET   "\033[0m"
 
-// Regular colors
-#define BLACK   "\033[30m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
-#define MAGENTA "\033[35m"
-#define CYAN    "\033[36m"
-#define WHITE   "\033[37m"
 
-// Bold
-#define BOLD_BLACK   "\033[1;30m"
-#define BOLD_RED     "\033[1;31m"
-#define BOLD_GREEN   "\033[1;32m"
-#define BOLD_YELLOW  "\033[1;33m"
-#define BOLD_BLUE    "\033[1;34m"
-#define BOLD_MAGENTA "\033[1;35m"
-#define BOLD_CYAN    "\033[1;36m"
-#define BOLD_WHITE   "\033[1;37m"
-
-// Bright
-#define BRIGHT_BLACK   "\033[90m"
-#define BRIGHT_RED     "\033[91m"
-#define BRIGHT_GREEN   "\033[92m"
-#define BRIGHT_YELLOW  "\033[93m"
-#define BRIGHT_BLUE    "\033[94m"
-#define BRIGHT_MAGENTA "\033[95m"
-#define BRIGHT_CYAN    "\033[96m"
-#define BRIGHT_WHITE   "\033[97m"
-
+// Terminal handling
 struct termios orig;
-
 
 void raw_off(void) {
   tcsetattr(STDIN_FILENO, TCSANOW, &orig);
   fprintf(stderr, SHOW_CURSOR);
   fflush(stderr);
 }
-
 
 void raw_on(void) {
   tcgetattr(STDIN_FILENO, &orig);
@@ -67,7 +43,7 @@ void raw_on(void) {
   atexit(raw_off);
 }
 
-
+// Directory handling
 int collect_directories(const char *dir_path, char ***out_array) {
   DIR *dir = opendir(dir_path);
   if (!dir) {
@@ -134,12 +110,11 @@ int collect_directories(const char *dir_path, char ***out_array) {
   return count;     // Return how many items were stored
 }
 
-
+// print messsages
 void print_help(const char *name) {
   printf(BOLD_WHITE "Usage: " RESET " %s <directory>\n", name);
   printf("\t Opens folder picker within passsed <directory>.\n"); 
 }
-
 
 void print_prompt(char ***items, int n, int sel, bool first) {
   if (!first) {
@@ -149,7 +124,7 @@ void print_prompt(char ***items, int n, int sel, bool first) {
   for (int i = 0; i < n; i++) {
     fprintf(stderr, CLR_LINE "%s %s%s%s\n",
       i == sel ? BOLD_RED ">" RESET : " ",
-      i == sel ? BOLD_MAGENTA : BRIGHT_BLACK,
+      i == sel ? BOLD_MAGENTA : GRAY,
       (*items)[i],
       RESET);
   }
@@ -157,7 +132,6 @@ void print_prompt(char ***items, int n, int sel, bool first) {
   fprintf(stderr, "\nPress 'q' to stay in current directory.\n");
   fflush(stderr);
 }
-
 
 void clear_prompt(int n) {
   fprintf(stderr, CUR_UP_N, n + 2);   // move back up to the top of the drawn menu
@@ -167,7 +141,6 @@ void clear_prompt(int n) {
   fprintf(stderr, CUR_UP_N, n + 2);   // move back up over the now-blank lines
   fflush(stderr);
 }
-
 
 int main(int argc, char const **argv) {
   if (argc != 2) {
